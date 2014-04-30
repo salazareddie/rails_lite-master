@@ -6,6 +6,17 @@ class Params
   # 2. post body
   # 3. route params
   def initialize(req, route_params = {})
+    @params = {}
+
+    @params.merge!(route_params)
+    if req.body
+      @params.merge!(parse_www_encoded_form(req.body))
+    end
+    if req.query_string
+      @params.merge!(parse_www_encoded_form(req.query_string))
+    end
+
+    @permitted = []
   end
 
   def [](key)
@@ -32,6 +43,24 @@ class Params
   # should return
   # { "user" => { "address" => { "street" => "main", "zip" => "89436" } } }
   def parse_www_encoded_form(www_encoded_form)
+    params = {}
+
+    key_values = URI.decode_www_form(www_encoded_form)
+    key_values.each do |key, value|
+      scope = params
+
+      key_seq = parse_key(key)
+      key_seq.each_with_index do |key_1, idx|
+        if (idx + 1) == key_seq.count
+          scope[key_1] = value
+        else
+          scope[key] ||= {}
+          scope = scope[key_1]
+        end
+      end
+    end
+
+    params
   end
 
   # this should return an array
