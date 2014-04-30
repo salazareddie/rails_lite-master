@@ -5,6 +5,14 @@ class Session
   # find the cookie for this app
   # deserialize the cookie into a hash
   def initialize(req)
+    cookie = req.cookies.select { |cook| cook.name == "_rails_lite_app"}.first
+    if cookie.value != {}
+      @cookie = cookie.value.to_json
+      puts @cookie
+    else
+      @cookie = {}
+      puts @cookie
+    end
   end
 
   def [](key)
